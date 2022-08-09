@@ -20,8 +20,7 @@ class G(nn.Module):
 
     #前向传播
     def forward(self,x):
-        out=self.G_layer(x)
-        return out
+        return self.G_layer(x)
 
 #建立D
 class D(nn.Module):
@@ -40,6 +39,5 @@ class D(nn.Module):
                 
     #前向传播
     def forward(self,x):
-        out=self.D_layer(x)
-        return out
+        return self.D_layer(x)
 

@@ -72,5 +72,4 @@ class AlexNet(torch.nn.Module):
         conv4_out = self.conv4(conv3_out)
         conv5_out = self.conv5(conv4_out)
         res = conv5_out.view(conv5_out.size(0), -1)#展平多维的卷积图成 一维(batch_size, 4096)
-        out = self.lostlayer(res)
-        return out
+        return self.lostlayer(res)

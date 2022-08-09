@@ -58,7 +58,7 @@ optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 
 # 开始训练
 for epoch in range(num_epoches):
-    print('epoch {}'.format(epoch + 1))
+    print(f'epoch {epoch + 1}')
     print('*' * 10)
     running_loss = 0.0
     running_acc = 0.0

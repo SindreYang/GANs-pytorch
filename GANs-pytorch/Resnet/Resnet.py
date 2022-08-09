@@ -60,21 +60,14 @@ class Resnet(torch.nn.Module):
 	#构建刚才的构建模块函数make_layers
 	def make_layer(self,in_c,out_c,n_block,stride=1):
 
-		#创建一个列表,用来放后面层 ,后面我们直接往里面添加就可以了
-		Sumlayers=[]
-		
 		#构建捷径(高速公路)
 		shortcut=torch.nn.Sequential(
 			torch.nn.Conv2d(in_c,out_c,1,stride),#1*1卷积
 			torch.nn.BatchNorm2d(out_c),
 		)
-		#构建完成残差
-		Sumlayers.append(ResBlock(in_c,out_c,stride,shortcut))
-
+		Sumlayers = [ResBlock(in_c, out_c, stride, shortcut)]
 		#构建右边的公路
-		for i in range(1,n_block):
-			Sumlayers.append (ResBlock (out_c, out_c))#注意输入,输出应该一样
-		
+		Sumlayers.extend(ResBlock (out_c, out_c) for _ in range(1,n_block))
 		return torch.nn.Sequential (*Sumlayers) #然后把构建好模型传出
 	
 
@@ -102,8 +95,7 @@ class ResBlock(torch.nn.Module):
 		y_l=self.left(x)
 		y_r = x if self.right is None else self.right (x) #如果有高数路为空,就直接保存在res中,否则执行高速路保存在res
 		sum_x=y_l+y_r #两个总和
-		out=self.last_y(sum_x)
-		return out
+		return self.last_y(sum_x)
 
 
 

@@ -70,13 +70,13 @@ args = parser.parse_args ()  # 相当于激活命令
 def train():
 	###############判断gpu#############
 	device = torch.device ('cuda') if args.cuda else torch.device ('cpu')
-	
+
 	####### 为CPU设置种子用于生成随机数，以使得结果是确定的##########
 	torch.manual_seed (args.seed)
 	if args.cuda:
 		torch.cuda.manual_seed (args.seed)
 	cudnn.benchmark = True
-	
+
 	#################可视化###############
 	if args.vis:
 		vis = Visualizer ('GANs')
@@ -88,14 +88,14 @@ def train():
 	###############数据载入################
 	# train_dataset = datasets.ImageFolder (root=args.dataset,  # 数据路径目录
 	# 									  transform=data_transforms)  # 把数据转换成上面约束样子
-	
+
 	train_dataset = datasets.CIFAR10(root=args.dataset,
 									 train=True,
 									 transform=data_transforms,
 									 download=False)
 	# test_dataset = datasets.ImageFolder (root=args.dataset,
 	# 									 transform=data_transforms)
-	
+
 	##############数据装载###############
 	train_loader = torch.utils.data.DataLoader (dataset=train_dataset,  # 装载数据
 												batch_size=args.batch_size,  # 设置批大小
@@ -103,13 +103,13 @@ def train():
 	# test_loader = torch.utils.data.DataLoader (dataset=test_dataset,
 	# 										   batch_size=args.batch_size,
 	# 										   shuffle=True)
-	
+
 	#############模型载入#################
 	netG ,netD= G (args),D (args)
 	netG.to (device)
 	netD.to (device)
 	print (netD, netG)
-	
+
 	###############损失函数##################
 	criterion = torch.nn.BCELoss ().to (device)
 	optimizerD = torch.optim.Adam (netD.parameters (), lr=args.lr_d,betas=(0.5, 0.999))  # Adam优化器
@@ -130,7 +130,7 @@ def train():
 			# 装箱
 			images = Variable (images)
 			noises=Variable(torch.randn(images.size(0), args.nz, 1, 1).to(device))
-			
+
 			#遍历每张图片,并且根据指定的训练机制训练
 			if i % args.d_every==0:#满足此条件训练D
 				#D前向传播
@@ -159,12 +159,12 @@ def train():
 				D_loss=d_fake_loss+d_real_loss
 				#D更新参数
 				optimizerD.step ()
-				
-				
+
+
 				# 度量
 				D_x = output_r.mean ().item ()
 				D_G_z1 = output_f.mean ().item ()
-			
+
 			if i % args.g_every==0:#满足此条件训练G
 				#G前向传播
 				optimizerG.zero_grad ()
@@ -181,7 +181,7 @@ def train():
 				D_G_z2 = output_f.mean ().item ()
 				#D更新参数
 				optimizerG.step ()
-				
+
 			###########################################
 			##########可视化(可选)#####################
 			if args.vis and i % args.plot_every == args.plot_every - 1:
@@ -204,28 +204,34 @@ def train():
 					fake = netG (images).detach ().cpu ()
 				import torchvision.utils as vutils
 				img_list.append (vutils.make_grid (fake, padding=2, normalize=True))
-	
+
 
 
 		#######################################
 		############保存模型###################
-	
+
 		if (epoch + 1) % args.save_every == 0:
 			import torchvision as tv
 			# 保存模型、图片
-			tv.utils.save_image (fake.data [:64], '%s/%s.png' % (args.save_data, epoch), normalize=True,range=(-1, 1))
-			torch.save (netD.state_dict (), 'checkpoints/netd_%s.pth' % epoch)
-			torch.save (netG.state_dict (), 'checkpoints/netg_%s.pth' % epoch)
-			print('完成%s的模型保存'%epoch)
+			tv.utils.save_image(
+				fake.data[:64],
+				f'{args.save_data}/{epoch}.png',
+				normalize=True,
+				range=(-1, 1),
+			)
+
+			torch.save(netD.state_dict (), f'checkpoints/netd_{epoch}.pth')
+			torch.save(netG.state_dict (), f'checkpoints/netg_{epoch}.pth')
+			print(f'完成{epoch}的模型保存')
 
 	#######################################
 	############画图###################
-	
+
 	if args.plt:
 		import matplotlib.pyplot as plt
 		import numpy as np
 		import torchvision.utils as vutils
-		
+
 		plt.figure (figsize=(10, 5))
 		plt.title ("GAN")
 		plt.plot (G_losses, label="G")
@@ -234,10 +240,10 @@ def train():
 		plt.ylabel ("损失",fontproperties='SimHei')
 		plt.legend ()
 		plt.show ()
-		
+
 		# 从数据集加载
 		real_batch = next (iter (train_dataset))
-		
+
 		# 画出真图
 		plt.figure (figsize=(15, 10))
 		plt.subplot (1, 2, 1)
@@ -246,7 +252,7 @@ def train():
 		plt.imshow (np.transpose (
 			vutils.make_grid (real_batch [0].to (device) [:64], padding=5, normalize=True).cpu (),
 			(1, 2, 0)))
-		
+
 		# 画出假图
 		plt.subplot (1, 2, 2)
 		plt.axis ("off")
@@ -268,21 +274,18 @@ def test():
 	#定义噪声
 	noises = torch.randn (args.batch_size, args.nz, 1, 1).to (device)
 	#载入网络
-	netd.load_state_dict (torch.load ('checkpoints/netd_%s.pth'%args.max_epoch))
-	netg.load_state_dict (torch.load ('checkpoints/netg_%s.pth'%args.max_epoch))
+	netd.load_state_dict(torch.load(f'checkpoints/netd_{args.max_epoch}.pth'))
+	netg.load_state_dict(torch.load(f'checkpoints/netg_{args.max_epoch}.pth'))
 	#设备化
 	netd.to (device)
 	netg.to (device)
 	# 生成图片，并计算图片在判别器的分数
 	fake_img = netg (noises)
 	scores = netd (fake_img).detach ()
-	
+
 	# 挑选最好的某几张
 	indexs = scores.topk (5) [1]
-	result = []
-	for i in indexs:
-		result.append (fake_img.data [i])
-	
+	result = [fake_img.data [i] for i in indexs]
 	# 保存图片
 	import torchvision as tv
 	tv.utils.save_image (torch.stack (result), 5, normalize=True, range=(-1, 1))

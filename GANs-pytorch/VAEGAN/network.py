@@ -39,9 +39,8 @@ class G(nn.Module):
     #前向传播
     def forward(self,x):
         out=self.encoder(x)
-        out_x=self.decoder(out)
         #print(out_x.size())
-        return out_x
+        return self.decoder(out)
 
 #建立D
 class D(nn.Module):
@@ -72,8 +71,7 @@ class D(nn.Module):
                 
     #前向传播
     def forward(self,x):
-        out=self.D_layer(x)
-        return out
+        return self.D_layer(x)
 
 
 

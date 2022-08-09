@@ -32,11 +32,10 @@ class VGG(torch.nn.Module):
 		)
 		
 	#前向传播
-	def forward (self, x):
+	def forward(self, x):
 		conv = self.Sumlayers (x)
 		res = conv.view (conv.size (0), -1)  # 展平多维的卷积图成 一维
-		out = self.fc(res)
-		return out
+		return self.fc(res)
 	
 	
 	#构建刚才的构建模块函数make_layers
@@ -46,7 +45,7 @@ class VGG(torch.nn.Module):
 					   512, 512, 512, 'Maxpool', 512, 512, 512, 'Maxpool']
 		#创建一个列表,用来放后面层 ,后面我们直接往里面添加就可以了
 		Sumlayers=[]
-		
+
 		#创建一个变量，来控制 卷积参数输入大小（in_channels）和输出大小（out_channels）
 		in_c = 3 #第一次输入大小
 		#遍历列表
@@ -58,7 +57,7 @@ class VGG(torch.nn.Module):
 						   	torch.nn.BatchNorm2d (x),#标准化一下
 						   	torch.nn.ReLU ()]
 				in_c=x #输出大小成为下个输入大小
-		
+
 		return torch.nn.Sequential (*Sumlayers) #然后把构建好模型传出
 	
 	
